@@ -33,9 +33,27 @@
  *******************************************************************************
  **/
 
+#include <errno.h>
+#include <getopt.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#define EOK                 0
+#define NO_ARGUMENT         0
+#define REQUIRED_ARGUMENT   1
+
+#define PID_OPT             'p'
+#define PRIORITY_OPT        'r'
+#define TID_OPT             't'
+
+#define PID_OPT_STR         "pid"
+#define PRIORITY_OPT_STR    "priority"
+#define TID_OPT_STR         "tid"
+
+#define HEX_BASE            16
+#define DEC_BASE            10
 
 #define log(fmt, type, ...)                                                     \
         do {                                                                    \
@@ -53,9 +71,92 @@ typedef struct {
         pthread_t tid;
 } ctx_st_t;
 
+static
+struct option cmd_options_long[] = {
+        {PID_OPT_STR,       REQUIRED_ARGUMENT, NULL, PID_OPT        },
+        {PRIORITY_OPT_STR,  REQUIRED_ARGUMENT, NULL, PRIORITY_OPT   },
+        {TID_OPT_STR,       REQUIRED_ARGUMENT, NULL, TID_OPT        },
+};
+
+static
+const char *cmd_options_short = "p:r:t:";
+
+static
+inline int str2int(const char *string)
+{
+        char *x_pos = NULL;
+        int value = 0;
+
+        x_pos = strchr(string, 'x');
+        if (NULL != x_pos) {
+                value = strtol(string, NULL, HEX_BASE);
+        } else {
+                value = strtol(string, NULL, DEC_BASE);
+        }
+
+        return value;
+}
+
+static
+int parse_arguments(ctx_st_t *ctx, int argc, char *argv[])
+{
+        int opt = 0;
+        int rc = EOK;
+        int option_index = 0;
+
+        if (NULL == ctx) {
+                log_err("Invalid input: ctx = %p\n", ctx);
+
+                return EINVAL;
+        }
+
+        while (-1 != (opt = getopt_long(argc, argv, cmd_options_short,
+                                        cmd_options_long, &option_index))) {
+                switch (opt) {
+                case PID_OPT:
+                        log_info("Process id: %s\n", optarg);
+
+                        ctx->pid = str2int(optarg);
+
+                        break;
+
+                case TID_OPT:
+                        log_info("Thread id: %s\n", optarg);
+
+                        ctx->tid = str2int(optarg);
+
+                        break;
+
+                case PRIORITY_OPT:
+                        log_info("Priority: %s\n", optarg);
+
+                        ctx->priority = str2int(optarg);
+
+                        break;
+
+                default:
+                        log_err("Unsupported option: %d\n", opt);
+
+                        return EINVAL;
+                }
+        }
+
+        return rc;
+}
+
 int main(int argc, char *argv[])
 {
+        int err = EOK;
+        ctx_st_t ctx = {0};
+
         log_info("setprio running\n");
+
+        err = parse_arguments(&ctx, argc, argv);
+        if (EOK != err) {
+                log_err("Command parsing failed. Error: %s\n", strerror(err));
+
+                return EXIT_FAILURE;
+        }
 
         return EXIT_SUCCESS;
 }
