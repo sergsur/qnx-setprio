@@ -35,11 +35,16 @@
 
 #include <errno.h>
 #include <getopt.h>
+#include <inttypes.h>
+#include <sched.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/neutrino.h>
+#include <sys/procmgr.h>
 
+#define SELF                0
 #define EOK                 0
 #define NO_ARGUMENT         0
 #define REQUIRED_ARGUMENT   1
@@ -144,6 +149,62 @@ int parse_arguments(ctx_st_t *ctx, int argc, char *argv[])
         return rc;
 }
 
+static
+int process_request(ctx_st_t *ctx)
+{
+        int rc = EOK;
+        struct sched_param sched_param = {0};
+        pthread_t pid = ctx->pid;
+        pthread_t tid = ctx->tid;
+        int32_t priority = ctx->priority;
+
+        if (NULL == ctx) {
+                log_err("Invalid input: ctx = %p\n", ctx);
+
+                return EINVAL;
+        }
+
+        log_info("Request to assign priority [%d] to the <pid:%d><tid:%d>\n",
+                 priority, pid, tid);
+
+        rc = procmgr_ability(SELF, PROCMGR_AID_SCHEDULE | PROCMGR_AID_PRIORITY |
+                             PROCMGR_AID_EOL);
+        if (EOK != rc) {
+                log_err("Failed to assign ability for changing priorities. Error: %s\n",
+                        strerror(rc));
+
+                return EFAULT;
+        }
+
+        rc = sched_getparam(pid, &sched_param);
+        if (EOK != rc) {
+                log_err("Failed to retrieve process <pid:%d><tid:%d> scheduling data. Error: %s\n",
+                        pid, tid, strerror(errno));
+
+                return EFAULT;
+        }
+
+        log_dbg("Process <pid:%d><tid:%d> scheduling priority: %d, %d\n", pid,
+                tid, sched_param.sched_priority, sched_param.sched_curpriority);
+
+        sched_param.sched_priority = priority;
+        sched_param.sched_curpriority = priority;
+
+        rc = SchedSet(pid, tid, SCHED_NOCHANGE, &sched_param);
+        if (EOK != rc) {
+                log_err("Failed to assign priority [%d] to the <pid:%d><tid:%d>"
+                        ". Error: %s\n", priority, pid, tid, strerror(errno));
+
+                return EFAULT;
+        }
+
+        log_info("Process <pid:%d><tid:%d> scheduling priority: sched = %d, current = %d\n",
+                 pid, tid, sched_param.sched_priority,
+                 sched_param.sched_curpriority);
+
+        return EOK;
+}
+
 int main(int argc, char *argv[])
 {
         int err = EOK;
@@ -154,6 +215,14 @@ int main(int argc, char *argv[])
         err = parse_arguments(&ctx, argc, argv);
         if (EOK != err) {
                 log_err("Command parsing failed. Error: %s\n", strerror(err));
+
+                return EXIT_FAILURE;
+        }
+
+        err = process_request(&ctx);
+        if (EOK != err) {
+                log_err("Failed to process request. Error: %s\n",
+                        strerror(err));
 
                 return EXIT_FAILURE;
         }
