@@ -33,10 +33,24 @@
  *******************************************************************************
  **/
 
+#include <stdio.h>
 #include <stdlib.h>
+
+#define log(fmt, type, ...)                                                     \
+        do {                                                                    \
+                printf("[%s:%d:%s] %s" fmt, __FILE__, __LINE__, __func__,       \
+                       type, ## __VA_ARGS__);                                   \
+        } while (0);
+
+#define log_info(fmt, ...)  log(fmt, "Inf:", ## __VA_ARGS__)
+#define log_err(fmt, ...)   log(fmt, "Err:", ## __VA_ARGS__)
+#define log_dbg(fmt, ...)   log(fmt, "Dbg:", ## __VA_ARGS__)
 
 int main(int argc, char *argv[])
 {
+
+        log_info("setprio running\n");
+
         return EXIT_SUCCESS;
 }
 
