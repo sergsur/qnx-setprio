@@ -1,0 +1,12 @@
+BUILD
+    
+    source ${QNX_SDP_PATH}/qnxsdp-env.sh
+    make
+
+        where QNX_SDP_PATH is path to QNX SDP, e.g.:
+        
+    source ~/qnx800/qnxsdp-env.sh
+
+
+USAGE (QNX)
+    use setprio
