@@ -33,6 +33,7 @@
  *******************************************************************************
  **/
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -46,9 +47,14 @@
 #define log_err(fmt, ...)   log(fmt, "Err:", ## __VA_ARGS__)
 #define log_dbg(fmt, ...)   log(fmt, "Dbg:", ## __VA_ARGS__)
 
+typedef struct {
+        int32_t   priority;
+        pthread_t pid;
+        pthread_t tid;
+} ctx_st_t;
+
 int main(int argc, char *argv[])
 {
-
         log_info("setprio running\n");
 
         return EXIT_SUCCESS;
