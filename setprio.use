@@ -1,1 +1,25 @@
-setprio
+NAME
+    setprio - set current and scheduling priority for a specific thread
+
+SYNOPSIS
+    setprio OPTION
+
+DESCRIPTION
+    -p PID, --pid=PID
+        Specify process ID
+
+    -t TID, --tid=TID
+        Specify process thread ID
+
+    -r NUM, --priority=NUM
+        Specify numeric priority NUM. No range validation
+
+EXAMPLES
+    Assign process 1 thread 3 with the priority of 22:
+
+        setprio -p 1 -t 3 -r 22
+
+HINTS
+    Get list of processes and thread IDs with their priorities in QNX:
+        pidin -fAInp
+
