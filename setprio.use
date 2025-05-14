@@ -6,13 +6,13 @@ SYNOPSIS
 
 DESCRIPTION
     -p PID, --pid=PID
-        Specify process ID
+        Specify process ID. Default: 0 (self)
 
     -t TID, --tid=TID
-        Specify process thread ID
+        Specify process thread ID. Default: 0 (self)
 
     -r NUM, --priority=NUM
-        Specify numeric priority NUM. No range validation
+        Specify numeric priority NUM. No range validation. Default: 0 (idle)
 
 EXAMPLES
     Assign process 1 thread 3 with the priority of 22:
