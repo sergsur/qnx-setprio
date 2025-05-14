@@ -1,3 +1,6 @@
 *.o
 *.pinfo
 *.dep
+
+nto-x86_64-o/*
+!nto-x86_64-o/Makefile
